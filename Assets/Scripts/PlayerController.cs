@@ -7,13 +7,25 @@ public class PlayerController : MonoBehaviour
 {
     float HorizontalMovement;
     float VerticalMovement;
-    float New_X_Position;
-    float New_Y_Position;
+    
+    float Raw_X_Pos;
+    float Raw_Y_Pos;
     float X_Offset;
     float Y_Offset;
+    float Clamped_X_Pos;
+    float Clamped_Y_Pos;
+
+    float Pitch;
+    float Yaw;
+    float Roll;
 
     [SerializeField] InputAction movement;
-    [SerializeField] float ControlSpeed = 10f;
+    [SerializeField] float ControlSpeed = 30f;
+    [SerializeField] float Raw_X_Range = 16f;
+    [SerializeField] float Raw_Y_Range = 8.5f;
+    [SerializeField] float PositionPitchFactor = -2f;
+    [SerializeField] float PositionYawFactor = 2f;
+    [SerializeField] float ControlPitchFactor = -20f;
 
     void Start()
     {
@@ -21,6 +33,17 @@ public class PlayerController : MonoBehaviour
     }
 
     void Update(){
+        PlayerControlSetup();
+        PlayerRotation();
+    }
+
+    void PlayerRotation(){
+        Pitch = (transform.localPosition.y * PositionPitchFactor) + (VerticalMovement * ControlPitchFactor);
+        Yaw = transform.localPosition.x * PositionYawFactor + HorizontalMovement;
+        transform.localRotation = Quaternion.Euler(Pitch, Yaw, Roll);
+    }
+
+    void PlayerControlSetup(){
         // OLD Input Setup
         // HorizontalMovement = Input.GetAxis("Horizontal");
         // VerticalMovement = Input.GetAxis("Vertical");
@@ -33,10 +56,13 @@ public class PlayerController : MonoBehaviour
         X_Offset = HorizontalMovement * Time.deltaTime * ControlSpeed;
         Y_Offset = VerticalMovement * Time.deltaTime * ControlSpeed;
 
-        New_X_Position = transform.localPosition.x + X_Offset;
-        New_Y_Position = transform.localPosition.y + Y_Offset;
+        Raw_X_Pos = transform.localPosition.x + X_Offset;
+        Raw_Y_Pos = transform.localPosition.y + Y_Offset;
 
-        transform.localPosition = new Vector3(New_X_Position, New_Y_Position, transform.localPosition.z);
+        Clamped_X_Pos = Mathf.Clamp(Raw_X_Pos, -Raw_X_Range, Raw_X_Range);
+        Clamped_Y_Pos = Mathf.Clamp(Raw_Y_Pos, -Raw_Y_Range, Raw_Y_Range);
+
+        transform.localPosition = new Vector3(Clamped_X_Pos, Clamped_Y_Pos, transform.localPosition.z);
     }
 
     private void OnEnable(){
